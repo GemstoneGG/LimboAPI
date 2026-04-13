@@ -199,7 +199,7 @@ enum MinecraftVersion {
   }
 }
 
-project.ext.dataDirectory = new File(this.getLayout().getBuildDirectory().get().getAsFile(), "minecraft")
+project.ext.dataDirectory = new File(gradle.gradleUserHomeDir, "caches/limboapi-minecraft")
 project.ext.generatedDir = new File(this.getLayout().getBuildDirectory().get().getAsFile(), "generated/minecraft")
 project.ext.versionManifestFile = new File(dataDirectory, "manifest.json")
 
@@ -220,7 +220,7 @@ tasks.register("downloadManifest") {
 }
 
 boolean checkIsCacheValid(File file) {
-  if (file.exists() && System.currentTimeMillis() - file.lastModified() < Long.parseLong(cacheValidMillis)) {
+  if (file.exists()) {
     println("> Found cached " + file.getName())
     return false
   }
