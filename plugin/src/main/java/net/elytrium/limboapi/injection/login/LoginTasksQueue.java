@@ -211,7 +211,7 @@ public class LoginTasksQueue {
     }
 
     Logger logger = LimboAPI.getLogger();
-    this.server.getEventManager().fire(new LoginEvent(this.player)).thenAcceptAsync(event -> {
+    this.server.getEventManager().fire(new LoginEvent(this.player, null)).thenAcceptAsync(event -> {
       if (connection.isClosed()) {
         // The player was disconnected.
         this.server.getEventManager().fireAndForget(new DisconnectEvent(this.player, DisconnectEvent.LoginStatus.CANCELLED_BY_USER_BEFORE_COMPLETE));
