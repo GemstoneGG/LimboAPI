@@ -3,7 +3,7 @@ dependencyResolutionManagement {
         mavenCentral()
         maven {
             name = "gritter-repo"
-            url = uri("https://repo.gritter.nl/snapshots/")
+            url = uri("https://repo.velocityctd.com/snapshots/")
         }
         maven {
             name = "elytrium-repo"
