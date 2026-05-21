@@ -284,14 +284,16 @@ public class LoginTasksQueue {
       this.plugin.setActiveSessionHandler(connection, StateRegistry.CONFIG, configHandler);
     }
 
-    this.server.getEventManager().fire(new PostLoginEvent(this.player)).thenAccept(postLoginEvent -> {
-      try {
-        MC_CONNECTION_SETTER.accept(this.handler, connection);
-        CONNECT_TO_INITIAL_SERVER_METHOD.invoke((AuthSessionHandler) this.handler, this.player);
-      } catch (Throwable e) {
-        throw new ReflectionException(e);
-      }
-    });
+    this.server.getEventManager().fire(new PostLoginEvent(this.player))
+        .whenComplete((ignored, throwable) -> this.server.getPlayerRegistry().finalizeLogin(player))
+        .thenAccept(postLoginEvent -> {
+          try {
+            MC_CONNECTION_SETTER.accept(this.handler, connection);
+            CONNECT_TO_INITIAL_SERVER_METHOD.invoke((AuthSessionHandler) this.handler, this.player);
+          } catch (Throwable e) {
+            throw new ReflectionException(e);
+          }
+        });
   }
 
   static {
