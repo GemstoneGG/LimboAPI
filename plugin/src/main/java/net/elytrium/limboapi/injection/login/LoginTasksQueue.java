@@ -35,7 +35,6 @@
 package net.elytrium.limboapi.injection.login;
 
 import com.velocitypowered.api.event.EventManager;
-import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.event.connection.LoginEvent;
 import com.velocitypowered.api.event.connection.PostLoginEvent;
 import com.velocitypowered.api.event.permission.PermissionsSetupEvent;
@@ -89,6 +88,7 @@ public class LoginTasksQueue {
   private static final BiConsumer<Object, MinecraftConnection> MC_CONNECTION_SETTER;
   private static final MethodHandle CONNECT_TO_INITIAL_SERVER_METHOD;
   private static final MethodHandle SET_CLIENT_BRAND;
+  private static final MethodHandle MARK_LOGIN_EVENT_FIRED;
   public static final BiConsumer<ClientConfigSessionHandler, String> BRAND_CHANNEL_SETTER;
 
   private final LimboAPI plugin;
@@ -211,10 +211,12 @@ public class LoginTasksQueue {
     }
 
     Logger logger = LimboAPI.getLogger();
+
+    MARK_LOGIN_EVENT_FIRED.invokeExact(this.player);
     this.server.getEventManager().fire(new LoginEvent(this.player, null)).thenAcceptAsync(event -> {
       if (connection.isClosed()) {
-        // The player was disconnected.
-        this.server.getEventManager().fireAndForget(new DisconnectEvent(this.player, DisconnectEvent.LoginStatus.CANCELLED_BY_USER_BEFORE_COMPLETE));
+        // The player was disconnected during LoginEvent processing. The natural teardown path
+        // is in flight (or will be) and will fire DisconnectEvent + release the identity lock.
       } else {
         Optional<Component> reason = event.getResult().getReasonComponent();
         if (reason.isPresent()) {
@@ -321,6 +323,9 @@ public class LoginTasksQueue {
 
       SET_CLIENT_BRAND = MethodHandles.privateLookupIn(ConnectedPlayer.class, MethodHandles.lookup())
           .findVirtual(ConnectedPlayer.class, "setClientBrand", MethodType.methodType(void.class, String.class));
+
+      MARK_LOGIN_EVENT_FIRED = MethodHandles.privateLookupIn(ConnectedPlayer.class, MethodHandles.lookup())
+          .findVirtual(ConnectedPlayer.class, "markLoginEventFired", MethodType.methodType(void.class));
 
       Field brandChannelField = ClientConfigSessionHandler.class.getDeclaredField("brandChannel");
       brandChannelField.setAccessible(true);
