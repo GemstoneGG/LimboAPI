@@ -87,6 +87,7 @@ public class LoginTasksQueue {
   private static final MethodHandle INITIAL_CONNECT_SESSION_HANDLER_CONSTRUCTOR;
   private static final BiConsumer<Object, MinecraftConnection> MC_CONNECTION_SETTER;
   private static final MethodHandle CONNECT_TO_INITIAL_SERVER_METHOD;
+  private static final MethodHandle SERVER_ID_HASH_GETTER;
   private static final MethodHandle SET_CLIENT_BRAND;
   private static final MethodHandle MARK_LOGIN_EVENT_FIRED;
   public static final BiConsumer<ClientConfigSessionHandler, String> BRAND_CHANNEL_SETTER;
@@ -211,9 +212,10 @@ public class LoginTasksQueue {
     }
 
     Logger logger = LimboAPI.getLogger();
+    String serverIdHash = (String) SERVER_ID_HASH_GETTER.invokeExact((AuthSessionHandler) this.handler);
 
     MARK_LOGIN_EVENT_FIRED.invokeExact(this.player);
-    this.server.getEventManager().fire(new LoginEvent(this.player, null)).thenAcceptAsync(event -> {
+    this.server.getEventManager().fire(new LoginEvent(this.player, serverIdHash)).thenAcceptAsync(event -> {
       if (connection.isClosed()) {
         // The player was disconnected during LoginEvent processing. The natural teardown path
         // is in flight (or will be) and will fire DisconnectEvent + release the identity lock.
@@ -316,6 +318,9 @@ public class LoginTasksQueue {
 
       CONNECT_TO_INITIAL_SERVER_METHOD = MethodHandles.privateLookupIn(AuthSessionHandler.class, MethodHandles.lookup())
           .findVirtual(AuthSessionHandler.class, "connectToInitialServer", MethodType.methodType(CompletableFuture.class, ConnectedPlayer.class));
+
+      SERVER_ID_HASH_GETTER = MethodHandles.privateLookupIn(AuthSessionHandler.class, MethodHandles.lookup())
+          .findGetter(AuthSessionHandler.class, "serverIdHash", String.class);
 
       Field mcConnectionField = AuthSessionHandler.class.getDeclaredField("mcConnection");
       mcConnectionField.setAccessible(true);
