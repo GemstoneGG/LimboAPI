@@ -231,6 +231,9 @@ public class LoginTasksQueue {
               return;
             }
             if (registered) {
+              // Required for compatibility since GemstoneGG/Velocity-CTD#981, as pointed out in GemstoneGG/Velocity-CTD#996.
+              this.player.fullyConnected();
+
               if (connection.getActiveSessionHandler() instanceof LoginConfirmHandler confirm) {
                 confirm.waitForConfirmation(() -> this.connectToServer(logger, this.player, connection));
               } else {
