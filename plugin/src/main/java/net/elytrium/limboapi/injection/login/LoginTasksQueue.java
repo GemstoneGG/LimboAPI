@@ -231,6 +231,10 @@ public class LoginTasksQueue {
               return;
             }
             if (registered) {
+              if (!this.server.getClusterPlayerService().onPlayerConnect(this.player)) {
+                return;
+              }
+
               // Required for compatibility since GemstoneGG/Velocity-CTD#981, as pointed out in GemstoneGG/Velocity-CTD#996.
               this.player.fullyConnected();
 
