@@ -18,7 +18,6 @@
 package net.elytrium.limboapi.server.item;
 
 import com.google.gson.Gson;
-import com.google.gson.internal.LinkedTreeMap;
 import com.velocitypowered.api.network.ProtocolVersion;
 import it.unimi.dsi.fastutil.Function;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
@@ -50,20 +49,20 @@ public class SimpleItemComponentManager {
   private static final Map<ProtocolVersion, Object2IntMap<String>> ID = new HashMap<>();
 
   static {
-    LinkedTreeMap<String, LinkedTreeMap<String, String>> mapping = GSON.fromJson(
+    Map<String, Map<String, String>> mapping = GSON.fromJson(
         new InputStreamReader(
             Objects.requireNonNull(LimboAPI.class.getResourceAsStream("/mapping/data_component_types_mapping.json")),
             StandardCharsets.UTF_8
         ),
-        LinkedTreeMap.class
+        Map.class
     );
 
-    LinkedTreeMap<String, String> components = GSON.fromJson(
+    Map<String, String> components = GSON.fromJson(
         new InputStreamReader(
             Objects.requireNonNull(LimboAPI.class.getResourceAsStream("/mapping/data_component_types.json")),
             StandardCharsets.UTF_8
         ),
-        LinkedTreeMap.class
+        Map.class
     );
 
     Map<String, ProtocolVersion> cache = new HashMap<>();

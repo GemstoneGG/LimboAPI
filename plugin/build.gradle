@@ -225,16 +225,27 @@ boolean checkIsCacheValid(File file) {
 File downloadVersionManifest(String version) {
   this.println("> Downloading ${version} manifest...")
 
-  Object manifest = new JsonSlurper().parse(versionManifestFile)
-  def optional = manifest.versions.stream().filter({ it.id == version }).findFirst()
-  if (optional.empty()) {
+  Map entry = findVersion(versionManifestFile, version)
+  if (entry == null) {
+    this.println("> Refreshing version manifest...")
+    FileUtils.copyURLToFile(new URL(manifestUrl), versionManifestFile)
+    entry = findVersion(versionManifestFile, version)
+  }
+
+  if (entry == null) {
     throw new RuntimeException("Couldn't find version: ${version}")
   }
 
   File output = new File(dataDirectory, "${version}/manifest.json")
   output.getParentFile().mkdirs()
-  FileUtils.copyURLToFile(new URL(optional.get().url), output)
+  FileUtils.copyURLToFile(new URL((String) entry.get("url")), output)
   return output
+}
+
+static Map findVersion(File manifestFile, String version) {
+  Map manifest = (Map) new JsonSlurper().parse(manifestFile)
+  List<Map> versions = (List<Map>) manifest.get("versions")
+  return versions.find({ it.get("id") == version })
 }
 
 @SuppressWarnings('GrMethodMayBeStatic')
@@ -294,7 +305,7 @@ File generateData(MinecraftVersion version) {
     command = "\"%s\" -cp \"${jarFile.getAbsolutePath()}\" net.minecraft.data.Main --reports --server"
   }
 
-  List<String> commandLine;
+  List<String> commandLine
   if (System.getProperty("os.name").toLowerCase().contains("win")) {
     File java = new File(System.getProperty("java.home"), "bin/java.exe")
     commandLine = ["cmd", "/c", String.format(command, java)]
@@ -551,8 +562,8 @@ static Map<String, Map<String, String>> sortRegistryMapping(Map<String, Map<Stri
 }
 
 void generateRegistryMapping(String target, File targetDir, Map<MinecraftVersion, Object> registriesReports) {
-  File targetFile = new File(targetDir, "${target}s.json");
-  File targetMappingFile = new File(targetDir, "${target}s_mapping.json");
+  File targetFile = new File(targetDir, "${target}s.json")
+  File targetMappingFile = new File(targetDir, "${target}s_mapping.json")
   if (checkIsCacheValid(targetFile) || checkIsCacheValid(targetMappingFile)) {
     this.println("> Generating ${target}s...")
 
@@ -602,7 +613,7 @@ void generateRegistryMappings(File targetDir, Map<MinecraftVersion, Object> regi
   this.generateRegistryMapping("data_component_type", targetDir, registriesReports
           .findAll({ e -> e.getKey() >= MinecraftVersion.MINECRAFT_1_20_5 }))
 
-  File blockEntitiesMappingFile = new File(targetDir, "blockentities_mapping.json");
+  File blockEntitiesMappingFile = new File(targetDir, "blockentities_mapping.json")
 
   if (checkIsCacheValid(blockEntitiesMappingFile)) {
     this.println("> Generating blockentities mapping...")
@@ -676,7 +687,7 @@ static Map<String, Map<String, List<String>>> getTags(File tagDir, Map<String, S
 }
 
 void generateTags(File targetDir, Map<MinecraftVersion, File> tagDirs) {
-  File tagsFile = new File(targetDir, "tags.json");
+  File tagsFile = new File(targetDir, "tags.json")
   if (checkIsCacheValid(tagsFile)) {
       this.println("> Generating tags...")
 

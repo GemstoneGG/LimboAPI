@@ -18,7 +18,6 @@
 package net.elytrium.limboapi.server.world;
 
 import com.google.gson.Gson;
-import com.google.gson.internal.LinkedTreeMap;
 import com.velocitypowered.api.network.ProtocolVersion;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
@@ -76,11 +75,11 @@ public class SimpleBlockEntity implements VirtualBlockEntity {
 
   @SuppressWarnings("unchecked")
   public static void init() {
-    LinkedTreeMap<String, LinkedTreeMap<String, String>> blockEntitiesMapping = GSON.fromJson(
+    Map<String, Map<String, String>> blockEntitiesMapping = GSON.fromJson(
         new InputStreamReader(
             Objects.requireNonNull(LimboAPI.class.getResourceAsStream("/mapping/blockentities_mapping.json")), StandardCharsets.UTF_8
         ),
-        LinkedTreeMap.class
+        Map.class
     );
 
     blockEntitiesMapping.forEach((modernId, protocols) -> {
